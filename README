@@ -1,0 +1,12 @@
+WHAT IT IS
+----------
+
+	This is package provides a video output plugin for VLC using OpenGL ES 2.
+
+
+HOW TO USE IT
+-------------
+
+	$ ./autogen.sh
+	$ make && sudo make install
+
