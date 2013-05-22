@@ -660,8 +660,8 @@ static GLuint texture_create(GLenum type)
  */
 static void update_textures_complex(vout_display_sys_t *vout, picture_t *p)
 {
+	static const vlc_chroma_description_t *c = NULL;
 	const video_format_t *const f = &vout->vd->fmt;
-	static vlc_chroma_description_t *c = NULL;
 	opengl_es2_t *gl = vout->gl;
 	GLbyte *buf, *dst, *src;
 
