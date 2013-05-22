@@ -105,6 +105,13 @@ enum shader_types {
 	SHADER_TYPE_COPY
 };
 
+typedef struct rectangle_t {
+	unsigned x;
+	unsigned y;
+	unsigned width;
+	unsigned height;
+} rectangle_t;
+
 typedef struct {
 	GLuint id;
 	GLint  loc;
@@ -124,6 +131,8 @@ typedef struct opengl_es2_t {
 	gl_shader_t  scale;
 	gl_texture_t tex[3];  /* y,u,v textures */
 	gl_texture_t rgb_tex; /* the rgb output */
+
+	rectangle_t viewport;
 	/* do we have support for GL_UNPACK_ROW_LENGTH */
 	bool has_unpack_row;
 } opengl_es2_t;
@@ -133,13 +142,6 @@ typedef struct egl_backend_t {
 	EGLSurface surface;
 	EGLContext context;
 } egl_backend_t;
-
-typedef struct rectangle_t {
-	unsigned x;
-	unsigned y;
-	unsigned width;
-	unsigned height;
-} rectangle_t;
 
 typedef struct x11_backend_t {
 	Display     *display;
@@ -756,12 +758,20 @@ static void do_deinterlace(vout_display_sys_t *vout, picture_t *p)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
 
-static void do_aspect_ratio_correction(const rectangle_t *src,
+static void compute_bounding_box(const vout_display_cfg_t *cfg,
 				       const rectangle_t *dst,
 				       rectangle_t *res)
 {
-	const double src_ratio = (double)src->width / src->height;
-	const double dst_ratio = (double)dst->width / dst->height;
+	double src_ratio;
+	double dst_ratio;
+	rectangle_t src;
+
+	src.x = src.y = 0;
+	src.width = cfg->display.width;
+	src.height = cfg->display.height;
+
+	src_ratio = (double)src.width / src.height;
+	dst_ratio = (double)dst->width / dst->height;
 
 	if (src_ratio > dst_ratio) {
 		res->width  = dst->width;
@@ -793,19 +803,12 @@ static void do_scaling_and_color_conversion(vout_display_sys_t *vout,
 		0, 1, 2, 0, 2, 3
 	};
 	opengl_es2_t *gl = vout->gl;
-	rectangle_t src, res;
 
 	glUseProgram(gl->scale.program);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	src.x = src.y = 0;
-	/* the width alone does not honor the aspect ratio */
-	src.width  = p->format.i_visible_width * p->format.i_sar_num / p->format.i_sar_den;
-	src.height = p->format.i_visible_height /* p->format.i_sar_num / p->format.i_sar_den*/;
-
-	do_aspect_ratio_correction(&src, &vout->x11->rect, &res);
-
-	glViewport(res.x, res.y, res.width, res.height);
+	glViewport(gl->viewport.x, gl->viewport.y,
+			gl->viewport.width, gl->viewport.height);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -963,6 +966,8 @@ static int Open(vlc_object_t *object)
 		goto cleanup;
 	}
 
+	compute_bounding_box(vd->cfg, &sys->x11->rect, &sys->gl->viewport);
+
 	/* p_vd->info is not modified */
 	vd->fmt.i_chroma = VLC_CODEC_I420;
 
@@ -1093,8 +1098,7 @@ static int do_control(vout_display_t *vd, int query, va_list args)
 	case VOUT_DISPLAY_CHANGE_SOURCE_ASPECT: {
 		const vout_display_cfg_t *cfg = va_arg(args, const vout_display_cfg_t *);
 		fprintf(stderr, "MSG: VOUT_DISPLAY_CHANGE_DISPLAY_SIZE\n");
-		vout->x11->rect.width = cfg->display.width;
-		vout->x11->rect.height = cfg->display.height;
+		compute_bounding_box(cfg, &vout->x11->rect, &vout->gl->viewport);
 		} return VLC_SUCCESS;
 
 	default:
