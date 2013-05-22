@@ -1071,9 +1071,9 @@ static void do_display(vout_display_t *vd, picture_t *p, subpicture_t *sp)
 	/* do the acutall drawing */
 	eglSwapBuffers(egl->display, egl->surface);
 
-
 	picture_Release(p);
-	if (sp) subpicture_Delete(sp);
+	if (sp)
+		subpicture_Delete(sp);
 }
 
 static int do_control(vout_display_t *vd, int query, va_list args)
