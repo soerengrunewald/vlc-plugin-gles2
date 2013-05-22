@@ -158,6 +158,39 @@ typedef struct vout_display_sys_t {
 	picture_pool_t *pool;
 } vout_display_sys_t;
 
+
+static void compute_bounding_box(const vout_display_cfg_t *cfg,
+				       const rectangle_t *dst,
+				       rectangle_t *res)
+{
+	double src_ratio;
+	double dst_ratio;
+	rectangle_t src;
+
+	src.x = src.y = 0;
+	src.width = cfg->display.width;
+	src.height = cfg->display.height;
+
+	src_ratio = (double)src.width / src.height;
+	dst_ratio = (double)dst->width / dst->height;
+
+	if (src_ratio > dst_ratio) {
+		res->width  = dst->width;
+		res->height = dst->width / src_ratio;
+		res->x      = 0;
+		res->y      = (dst->height - res->height) / 2;
+	} else if (src_ratio < dst_ratio) {
+		res->width  = dst->height * src_ratio;
+		res->height = dst->height;
+		res->x      = (dst->width - res->width) / 2;
+		res->y      = 0;
+	} else {
+		res->width  = dst->width;
+		res->height = dst->height;
+		res->x = res->y = 0;
+	}
+}
+
 static void x11_backend_destroy(x11_backend_t *x11)
 {
 	if (!x11)
@@ -182,15 +215,19 @@ static void x11_backend_destroy(x11_backend_t *x11)
 	x11 = NULL;
 }
 
-static void x11_backend_handle_events(x11_backend_t *x11)
+static void x11_backend_handle_events(vout_display_sys_t *sys)
 {
+	x11_backend_t *x11 = sys->x11;
 	XEvent xev;
 
 	while (XPending(x11->display)) {
 		XNextEvent(x11->display, &xev);
-		if (ConfigureNotify == xev.type) {
+		if (xev.type == ConfigureNotify) {
 			x11->rect.width = xev.xconfigure.width;
 			x11->rect.height = xev.xconfigure.height;
+
+			compute_bounding_box(sys->vd->cfg, &x11->rect,
+					     &sys->gl->viewport);
 		}
 	}
 }
@@ -758,38 +795,6 @@ static void do_deinterlace(vout_display_sys_t *vout, picture_t *p)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
 
-static void compute_bounding_box(const vout_display_cfg_t *cfg,
-				       const rectangle_t *dst,
-				       rectangle_t *res)
-{
-	double src_ratio;
-	double dst_ratio;
-	rectangle_t src;
-
-	src.x = src.y = 0;
-	src.width = cfg->display.width;
-	src.height = cfg->display.height;
-
-	src_ratio = (double)src.width / src.height;
-	dst_ratio = (double)dst->width / dst->height;
-
-	if (src_ratio > dst_ratio) {
-		res->width  = dst->width;
-		res->height = dst->width / src_ratio;
-		res->x      = 0;
-		res->y      = (dst->height - res->height) / 2;
-	} else if (src_ratio < dst_ratio) {
-		res->width  = dst->height * src_ratio;
-		res->height = dst->height;
-		res->x      = (dst->width - res->width) / 2;
-		res->y      = 0;
-	} else {
-		res->width  = dst->width;
-		res->height = dst->height;
-		res->x = res->y = 0;
-	}
-}
-
 static void do_scaling_and_color_conversion(vout_display_sys_t *vout,
 					    picture_t *p)
 {
@@ -1054,7 +1059,6 @@ static picture_pool_t *do_pool(vout_display_t *vd, unsigned count)
 static void do_display(vout_display_t *vd, picture_t *p, subpicture_t *sp)
 {
 	vout_display_sys_t *sys = vd->sys;
-	x11_backend_t *x11 = sys->x11;
 	egl_backend_t *egl = sys->egl;
 
 	if (p->format.i_chroma != VLC_CODEC_I420 || p->i_planes != 3) {
@@ -1064,7 +1068,7 @@ static void do_display(vout_display_t *vd, picture_t *p, subpicture_t *sp)
 	}
 
 	/* do event handling stuff */
-	x11_backend_handle_events(x11);
+	x11_backend_handle_events(sys);
 	/* do the rendering */
 	do_deinterlace(sys, p);
 	do_scaling_and_color_conversion(sys, p);
