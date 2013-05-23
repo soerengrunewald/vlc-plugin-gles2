@@ -752,7 +752,7 @@ static void update_textures(vout_display_sys_t *vout, picture_t *p)
 		update_textures_complex(vout, p);
 }
 
-static void do_deinterlace(vout_display_sys_t *vout, picture_t *p)
+static void do_deinterlace_and_color_conversion(vout_display_sys_t *vout, picture_t *p)
 {
 	const GLfloat vVertices[] = {
 		-1.0f, -1.0f, 0.0f, 1.0f,
@@ -791,7 +791,7 @@ static void do_deinterlace(vout_display_sys_t *vout, picture_t *p)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 }
 
-static void do_scaling_and_color_conversion(vout_display_sys_t *vout,
+static void do_scaling(vout_display_sys_t *vout,
 					    picture_t *p)
 {
 	const GLfloat vVertices[] = {
@@ -1066,8 +1066,8 @@ static void do_display(vout_display_t *vd, picture_t *p, subpicture_t *sp)
 	/* do event handling stuff */
 	x11_backend_handle_events(sys);
 	/* do the rendering */
-	do_deinterlace(sys, p);
-	do_scaling_and_color_conversion(sys, p);
+	do_deinterlace_and_color_conversion(sys, p);
+	do_scaling(sys, p);
 	/* do the acutall drawing */
 	eglSwapBuffers(egl->display, egl->surface);
 
