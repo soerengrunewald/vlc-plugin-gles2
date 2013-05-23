@@ -317,53 +317,6 @@ cleanup:
 	return VLC_EGENERIC;
 }
 
-/*
- * Tegra specific fix to close handles left open by the tegra driver.
- * This has only relevance if you keep the player process open and
- * start stop the video playback very offen or over a very long time.
- */
-static void quirk_close_forgotten_handles()
-{
-	char path[MAXPATHLEN];
-	struct dirent *entry;
-	struct stat info;
-	int64_t fid;
-	DIR *dir;
-
-	snprintf(path, ARRAY_SIZE(path), "/proc/%u/fd", getpid());
-
-	if (lstat(path, &info) < 0 || !S_ISDIR(info.st_mode))
-		return;
-
-	if ((dir = opendir(path)) == NULL)
-		return;
-
-	while ((entry = readdir(dir)) != NULL) {
-		char file[MAXPATHLEN] = { 0 };
-		char link[MAXPATHLEN] = { 0 };
-
-		snprintf(file, ARRAY_SIZE(file), "%s/%s", path, entry->d_name);
-
-		if (lstat(file, &info) < 0 || !S_ISLNK(info.st_mode))
-			continue;
-
-		if (readlink(file, link, ARRAY_SIZE(link)) < 0)
-			continue;
-
-		/* if the link does not point to on of these files,
-		 * try the next one */
-		if (strcmp(link, "/dev/tegra_sema") != 0 &&
-		    strcmp(link, "/dev/nvhost-gr2d") != 0 &&
-		    strcmp(link, "/dev/nvhost-gr3d") != 0)
-			continue;
-
-		fid = strtoll(entry->d_name, NULL, 10);
-		if (fid > 0 && close(fid) < 0)
-			fprintf(stderr, "ERR: failed to close handle %lld\n", fid);
-	}
-	closedir(dir);
-}
-
 static void egl_backend_destroy(egl_backend_t *egl)
 {
 	if (!egl)
@@ -383,9 +336,6 @@ static void egl_backend_destroy(egl_backend_t *egl)
 	}
 	free(egl);
 	egl = NULL;
-
-	/* FIXME: this is required due to a tegra l4t driver bug. */
-	quirk_close_forgotten_handles();
 }
 
 static int egl_backend_create(egl_backend_t **egl, x11_backend_t *x11)
