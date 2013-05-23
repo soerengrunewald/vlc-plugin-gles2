@@ -775,7 +775,6 @@ static void do_deinterlace(vout_display_sys_t *vout, picture_t *p)
 	glUseProgram(gl->deint.program);
 
 	glViewport(0, 0, width, height);
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	glVertexAttribPointer(gl->deint.position_loc, 2,
 			      GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat),
