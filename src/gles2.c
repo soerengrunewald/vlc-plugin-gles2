@@ -159,9 +159,9 @@ typedef struct vout_display_sys_t {
 } vout_display_sys_t;
 
 
-static void compute_bounding_box(const vout_display_cfg_t *cfg,
-				       const rectangle_t *dst,
-				       rectangle_t *res)
+static void update_bounding_box(const vout_display_cfg_t *cfg,
+				const rectangle_t *dst,
+				rectangle_t *res)
 {
 	double src_ratio;
 	double dst_ratio;
@@ -226,8 +226,8 @@ static void x11_backend_handle_events(vout_display_sys_t *sys)
 			x11->rect.width = xev.xconfigure.width;
 			x11->rect.height = xev.xconfigure.height;
 
-			compute_bounding_box(sys->vd->cfg, &x11->rect,
-					     &sys->gl->viewport);
+			update_bounding_box(sys->vd->cfg, &x11->rect,
+					    &sys->gl->viewport);
 		}
 	}
 }
@@ -917,7 +917,7 @@ static int Open(vlc_object_t *object)
 		goto cleanup;
 	}
 
-	compute_bounding_box(vd->cfg, &sys->x11->rect, &sys->gl->viewport);
+	update_bounding_box(vd->cfg, &sys->x11->rect, &sys->gl->viewport);
 
 	/* p_vd->info is not modified */
 	vd->fmt.i_chroma = VLC_CODEC_I420;
@@ -1048,7 +1048,7 @@ static int do_control(vout_display_t *vd, int query, va_list args)
 	case VOUT_DISPLAY_CHANGE_SOURCE_ASPECT: {
 		const vout_display_cfg_t *cfg = va_arg(args, const vout_display_cfg_t *);
 		fprintf(stderr, "MSG: VOUT_DISPLAY_CHANGE_DISPLAY_SIZE\n");
-		compute_bounding_box(cfg, &vout->x11->rect, &vout->gl->viewport);
+		update_bounding_box(cfg, &vout->x11->rect, &vout->gl->viewport);
 		} return VLC_SUCCESS;
 
 	default:
