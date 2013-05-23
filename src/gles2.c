@@ -391,7 +391,6 @@ static void egl_backend_destroy(egl_backend_t *egl)
 static int egl_backend_create(egl_backend_t **egl, x11_backend_t *x11)
 {
 	const EGLint cfg_attr[] = {
-		EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 		EGL_BUFFER_SIZE, 24,
 		EGL_NONE
