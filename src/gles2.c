@@ -735,15 +735,13 @@ static void update_textures_simple(vout_display_sys_t *vout, picture_t *p)
 	for (unsigned i = 0; i < p->i_planes; i++) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, gl->tex[i].id);
-		if (vout->gl->has_unpack_row)
-			glPixelStorei(GL_UNPACK_ROW_LENGTH, p->p[i].i_pitch / p->p[i].i_pixel_pitch);
+		glPixelStorei(GL_UNPACK_ROW_LENGTH, p->p[i].i_pitch / p->p[i].i_pixel_pitch);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, p->p[i].i_visible_pitch, p->p[i].i_visible_lines,
 		             0, GL_LUMINANCE, GL_UNSIGNED_BYTE, p->p[i].p_pixels);
 		glUniform1i(gl->tex[i].loc, i);
 	}
-	/* reset row paacking */
-	if (vout->gl->has_unpack_row)
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	/* reset row packing */
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 }
 
 static void update_textures(vout_display_sys_t *vout, picture_t *p)
