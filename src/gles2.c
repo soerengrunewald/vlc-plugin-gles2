@@ -269,7 +269,7 @@ static int x11_backend_create(x11_backend_t **x11, vout_window_cfg_t *cfg, vout_
 	root = DefaultRootWindow(x->display);
 
 	if (x->external) {
-		unsigned int border, depth;
+		unsigned int border = 0, depth = 0;
 
 		XSelectInput(x->display, x->window, ExposureMask |
 			     StructureNotifyMask | VisibilityChangeMask);
