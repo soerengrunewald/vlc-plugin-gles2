@@ -84,7 +84,7 @@ vlc_module_begin ()
     set_subcategory( SUBCAT_VIDEO_VOUT )
     set_shortname( N_("gles2") )
     set_description( N_("OpenGL ES 2 video output") )
-    set_capability( "vout display", 151 )
+    set_capability( "vout display", 201 )
     set_callbacks( Open, Close )
 
     add_shortcut("embed-xid", "xid")
