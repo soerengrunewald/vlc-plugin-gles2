@@ -1,7 +1,7 @@
 dnl required version of autoconf
 AC_PREREQ([2.60])
 
-AC_INIT([vlc-plugin-gles2],[0.1.0],[bugs@avionic-design.de])
+AC_INIT([vlc-plugin-gles2],[0.1.2],[bugs@avionic-design.de])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src])

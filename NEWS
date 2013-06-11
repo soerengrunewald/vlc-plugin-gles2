@@ -1,5 +1,8 @@
-Release x.y.z (YYYY-MM-DD)
+Release 0.1.2 (2013-06-11)
 ==========================
+- Update computing bounding box.
+- Performance enhancements.
+- Code cleanups.
 
 Release 0.1.0 (2013-02-21)
 ==========================
