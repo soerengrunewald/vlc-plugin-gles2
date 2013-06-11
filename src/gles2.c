@@ -75,6 +75,7 @@
 	"Video will be embedded in this pre-existing window. " \
 	"If zero, a new window will be created.")
 
+#define MEASURE_TIME 0
 
 static int Open( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -1006,7 +1007,12 @@ static void do_display(vout_display_t *vd, picture_t *p, subpicture_t *sp)
 {
 	vout_display_sys_t *sys = vd->sys;
 	egl_backend_t *egl = sys->egl;
+#if MEASURE_TIME
+	static int64_t time = 0;
+	int64_t t;
 
+	t = libvlc_clock();
+#endif
 	if (p->format.i_chroma != VLC_CODEC_I420 || p->i_planes != 3) {
 		fprintf(stderr, "ERR: unsupported picture format: %s\n",
 			vlc_fourcc_GetDescription(UNKNOWN_ES, p->format.i_chroma));
@@ -1024,6 +1030,11 @@ static void do_display(vout_display_t *vd, picture_t *p, subpicture_t *sp)
 	picture_Release(p);
 	if (sp)
 		subpicture_Delete(sp);
+
+#if MEASURE_TIME
+	time = time * 0.9 + (libvlc_clock() - t) * 0.1;
+	fprintf(stderr, "%lldms\n", time / 1000);
+#endif
 }
 
 static int do_control(vout_display_t *vd, int query, va_list args)
