@@ -3,6 +3,12 @@ WHAT IT IS
 
 	This is package provides a video output plugin for VLC using OpenGL ES 2.
 
+	To goal is to provide a video output plugin which does accelerated rendering
+	and deinterlacing in a single step for weak cpu - moderate gpu combinations.
+
+	It has been used on Tegra2 to decode and display MPEG2 videos without access
+	to the internal hardware decoder.
+
 
 HOW TO USE IT
 -------------
@@ -10,3 +16,9 @@ HOW TO USE IT
 	$ ./autogen.sh
 	$ make && sudo make install
 
+
+REQUIREMENTS
+------------
+
+	- VLC 2.x
+	- OpenGL ES 2 Headers and Libs (see Mesa)
